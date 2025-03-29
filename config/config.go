@@ -14,8 +14,10 @@ type MasterConfig struct {
 	WebSocketPort     int    `yaml:"ws_port"`
 	HeartBeatInterval int    `yaml:"heartbeat_interval"`
 	LockTimeout       int    `yaml:"lock_timeout"`
-	ChunkingFactor    int    `yaml:"chunking_factor"`
+	ChunkSize         int    `yaml:"chunk_size"`
 	ReplicationFactor int    `yaml:"replication_factor"`
+	ReadQuorum        int    `yaml:"read_quorum"`
+	WriteQuorum       int    `yaml:"write_quorum"`
 }
 
 type Node struct {

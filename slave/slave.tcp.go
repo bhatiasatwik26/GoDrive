@@ -10,7 +10,7 @@ import (
 
 type TcpPayload struct {
 	Type  string `json:"type"`
-	Value string `json:"value"`
+	Value []byte `json:"value"`
 }
 
 func StartSlaveNodes() {
@@ -22,8 +22,10 @@ func StartSlaveNodes() {
 }
 
 func startSlaveTcp(node config.Node) {
+	log.Println("in")
 	fullAddress := fmt.Sprintf(":%s", node.Port)
 	listener, err := net.Listen("tcp", fullAddress)
+
 	if err != nil {
 		log.Fatal("Cant boot tcp server:", node.Port)
 		return
@@ -33,7 +35,7 @@ func startSlaveTcp(node config.Node) {
 	log.Println("Slave listening on port", fullAddress)
 
 	for {
-		connection, err := listener.Accept()
+		connection, err := listener.Accept() // <---- pause
 		if err != nil {
 			log.Println("Error in connection, dropping now", node.Port)
 			continue
@@ -55,11 +57,10 @@ func handleIncomingMasterRequest(node config.Node, connection net.Conn) {
 	if err != nil {
 		log.Println("Error unmarshaling json", node.Port)
 	}
+	fmt.Println(incomingPayload)
 	if incomingPayload.Type == "chunk" {
 		if _, err := connection.Write([]byte("ACK")); err != nil {
 			log.Println("Error sending ACK", node.Port)
-		} else {
-			log.Println("ACK sent to master", node.Port)
 		}
 	} else if incomingPayload.Type == "req" {
 		log.Println(incomingPayload.Value)

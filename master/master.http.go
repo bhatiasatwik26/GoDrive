@@ -13,9 +13,12 @@ type uploadedFile struct {
 	Content string `json:"content"`
 }
 
+var MyNodeSelector *RoundRobinNodeSelector
+
 func StartMasterHttp() {
-	port := config.ReadConfig.Master.HttpPort // 2000
-	fullAddress := fmt.Sprintf(":%d", port)   //:2000
+	port := config.ReadConfig.Master.HttpPort
+	fullAddress := fmt.Sprintf(":%d", port)
+	MyNodeSelector = NewRoundRobinSelector(config.ReadConfig.SlaveNodes)
 
 	http.HandleFunc("/", healthCheck)
 	http.HandleFunc("/upload", handleFileUpload)
@@ -48,6 +51,7 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "fileName or content is empty", http.StatusBadRequest)
 		return
 	}
+	BreakFilesIntoChunks(incomingFile)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf("Accepted file: %v", incomingFile.Name)))
 }

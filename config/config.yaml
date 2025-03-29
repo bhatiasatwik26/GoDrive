@@ -5,8 +5,10 @@ master:
   ws_port: 6000
   heartbeat_interval: 5000  
   lock_timeout: 3000
-  chunking_factor: 3
-  replication_factor: 2
+  chunk_size: 256
+  replication_factor: 3
+  read_quorum: 2
+  write_quorum: 2
 
 slaveDataNodes:
   - host: "127.0.0.1"
