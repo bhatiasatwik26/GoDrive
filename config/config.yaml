@@ -1,0 +1,31 @@
+master:
+  host: "127.0.0.1"
+  http_port: 4000
+  tcp_port: 5000
+  ws_port: 6000
+  heartbeat_interval: 5000  
+  lock_timeout: 3000
+  chunking_factor: 3
+  replication_factor: 2
+
+slaveDataNodes:
+  - host: "127.0.0.1"
+    port: 6001
+  - host: "127.0.0.1"
+    port: 6002
+  - host: "127.0.0.1"
+    port: 6003
+  - host: "127.0.0.1"
+    port: 6004
+  - host: "127.0.0.1"
+    port: 6005
+  - host: "127.0.0.1"
+    port: 6006
+
+backupNodes:
+  - host: "127.0.0.1"
+    port: 5001
+  - host: "127.0.0.1"
+    port: 5002
+
+   
