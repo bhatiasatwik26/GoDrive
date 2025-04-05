@@ -17,9 +17,11 @@ func NewRoundRobinSelector(nodes []config.Node) *RoundRobinNodeSelector {
 		nodeList:  nodes,
 	}
 }
-func (R RoundRobinNodeSelector) GiveNode() config.Node {
-	var t config.Node
-	t.Host = "127.0.0.1"
-	t.Port = "6001"
-	return t
+
+func (R *RoundRobinNodeSelector) GiveNode() config.Node {
+	R.mutex.Lock()
+	defer R.mutex.Unlock()
+	node := R.nodeList[R.nodeIndex]
+	R.nodeIndex = (R.nodeIndex + 1) % len(R.nodeList)
+	return node
 }

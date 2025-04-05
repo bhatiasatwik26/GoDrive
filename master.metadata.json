@@ -1,0 +1,18 @@
+{
+  "intro.txt": {
+    "0": {
+      "ChunkHash": "e12e115acf4552b2568b55e93cbd39394c4ef81c82447fafc997882a02d23677",
+      "SlaveNodeList": [
+        "6003",
+        "6002"
+      ]
+    },
+    "1": {
+      "ChunkHash": "e59e4dc24c482ed5ea574fb4f5367f340cb0c77d504bd5b1a982038e2d861954",
+      "SlaveNodeList": [
+        "6004",
+        "6001"
+      ]
+    }
+  }
+}

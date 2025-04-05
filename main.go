@@ -8,6 +8,7 @@ import (
 
 func main() {
 	config.LoadConfig()
+	master.ConfigureMasterTcpServices()
 	slave.StartSlaveNodes()
 	go master.StartMasterHttp()
 	// log.Println("hey")

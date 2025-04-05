@@ -1,12 +1,16 @@
 package master
 
-import "log"
+import (
+	"crypto/sha256"
+	"fmt"
+)
 
 type FileChunk struct {
-	Index int
-	Data  []byte
-	Hash  []byte
+	Index int    `json:"index"`
+	Data  []byte `json:"data"`
+	Hash  string `json:"hash"`
 }
+
 type FileStruct struct {
 	Name   string
 	Chunks []FileChunk
@@ -22,13 +26,17 @@ func BreakFilesIntoChunks(incomingFile uploadedFile) {
 	chunkInd := 0
 	for i := 0; i < len(fileInBytes); i += chunkSize {
 		end := min(len(fileInBytes), i+chunkSize)
+		chunkHash := sha256.Sum256(fileInBytes[i:end])
 		newChunk := FileChunk{
 			Index: chunkInd,
 			Data:  fileInBytes[i:end],
+			Hash:  fmt.Sprintf("%x", chunkHash),
 		}
 		chunkInd += 1
 		createdFile.Chunks = append(createdFile.Chunks, newChunk)
 	}
-	log.Println(len(createdFile.Chunks))
 	DistriButeChunksToNode(createdFile)
+}
+func MergeChunksToFile() uploadedFile {
+	return uploadedFile{}
 }

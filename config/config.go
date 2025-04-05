@@ -21,8 +21,9 @@ type MasterConfig struct {
 }
 
 type Node struct {
-	Host string `yaml:"host"`
-	Port string `yaml:"port"`
+	Host    string `yaml:"host"`
+	Port    string `yaml:"port"`
+	Healthy bool   `yaml:"health"`
 }
 type Config struct {
 	Master      MasterConfig
@@ -41,4 +42,5 @@ func LoadConfig() {
 	if err != nil {
 		log.Fatal("Couldn't read config")
 	}
+	log.Println("Config Loaded Sucessfully!!!")
 }

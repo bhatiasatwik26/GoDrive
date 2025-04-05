@@ -13,16 +13,18 @@ type NodeSelector interface {
 func DistriButeChunksToNode(file FileStruct) {
 	var wg sync.WaitGroup
 	for _, chunk := range file.Chunks {
-		wg.Add(1)
-
-		go func(chunk FileChunk) {
-			defer wg.Done()
-			selectedNode := MyNodeSelector.GiveNode()
-			if err := SendDataToSlave(selectedNode, chunk.Data); err != nil {
-				log.Println()
-			}
-		}(chunk)
-
+		for replication := 0; replication < 2; replication++ {
+			wg.Add(1)
+			go func(chunk FileChunk) {
+				defer wg.Done()
+				selectedNode := MyNodeSelector.GiveNode()
+				_, err := SendDataToSlave(selectedNode, chunk)
+				if err != nil {
+					log.Println()
+				}
+				addChunkInfoToMetaData(file.Name, chunk.Hash, chunk.Index, selectedNode.Port)
+			}(chunk)
+		}
 	}
 	wg.Wait()
 }
