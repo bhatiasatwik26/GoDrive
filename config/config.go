@@ -42,5 +42,5 @@ func LoadConfig() {
 	if err != nil {
 		log.Fatal("Couldn't read config")
 	}
-	log.Println("Config Loaded Sucessfully!!!")
+	log.Println("Config Loaded Sucessfully!")
 }

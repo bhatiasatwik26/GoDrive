@@ -16,27 +16,35 @@ type FileStruct struct {
 	Chunks []FileChunk
 }
 
-func BreakFilesIntoChunks(incomingFile uploadedFile) {
+func BreakFilesIntoChunks(incomingFile uploadedFile) FileStruct {
 	name, content := incomingFile.Name, incomingFile.Content
 	// chunkSize := config.ReadConfig.Master.ChunkSize
 	chunkSize := 4
 	var createdFile FileStruct
-	fileInBytes := []byte(content)
+	contentInBytes := []byte(content)
 	createdFile.Name = name
 	chunkInd := 0
-	for i := 0; i < len(fileInBytes); i += chunkSize {
-		end := min(len(fileInBytes), i+chunkSize)
-		chunkHash := sha256.Sum256(fileInBytes[i:end])
+	for i := 0; i < len(contentInBytes); i += chunkSize {
+		end := min(len(contentInBytes), i+chunkSize)
+		chunkHash := sha256.Sum256(contentInBytes[i:end])
 		newChunk := FileChunk{
 			Index: chunkInd,
-			Data:  fileInBytes[i:end],
+			Data:  contentInBytes[i:end],
 			Hash:  fmt.Sprintf("%x", chunkHash),
 		}
 		chunkInd += 1
 		createdFile.Chunks = append(createdFile.Chunks, newChunk)
 	}
-	DistriButeChunksToNode(createdFile)
+	return createdFile
 }
-func MergeChunksToFile() uploadedFile {
-	return uploadedFile{}
+func MergeChunksToFile(downloadedFile FileStruct) uploadedFile {
+	createdFile := uploadedFile{
+		Name: downloadedFile.Name,
+	}
+	var contentInBytes []byte
+	for _, data := range downloadedFile.Chunks {
+		contentInBytes = append(contentInBytes, data.Data...)
+	}
+	createdFile.Content = string(contentInBytes)
+	return createdFile
 }

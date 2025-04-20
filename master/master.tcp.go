@@ -18,11 +18,12 @@ type TcpPayload struct {
 
 func ConfigureMasterTcpServices() {
 	loadMetaDataFromFile()
-	log.Println("Metadata Loaded Sucessfully!!!")
+	log.Println("Metadata Loaded Sucessfully!")
 }
 
 func SendDataToSlave(slaveNode config.Node, chunk FileChunk) (bool, error) {
 
+	log.Println(slaveNode)
 	connection, err := net.Dial("tcp", fmt.Sprintf("%s:%s", slaveNode.Host, slaveNode.Port))
 	if err != nil {
 		log.Println("Could not connect to slave to send data:", err)
@@ -60,12 +61,12 @@ func SendDataToSlave(slaveNode config.Node, chunk FileChunk) (bool, error) {
 	}
 }
 
-func RequestDataFromSlave(slavePort string, key string) {
+func RequestChunkFromSlave(slavePort string, key string) (FileChunk, error) {
 	host := "127.0.0.1"
 	connection, err := net.Dial("tcp", fmt.Sprintf("%s:%s", host, slavePort))
 	if err != nil {
 		log.Println("Could not connect to slave to send data:", err)
-		return
+		return FileChunk{}, errors.New("Couldn't connect to slave")
 	}
 	defer connection.Close()
 
@@ -73,10 +74,8 @@ func RequestDataFromSlave(slavePort string, key string) {
 	jsonData, _ := json.Marshal(payload)
 	_, err = connection.Write(jsonData)
 	if err != nil {
-		log.Println("Error sending chunk:", err)
-		return
+		return FileChunk{}, errors.New("Couldn't connect to slave")
 	}
-	fmt.Println("Request sent sucessfully to:", slavePort)
 
 	connection.SetReadDeadline(time.Now().Add(10 * time.Second))
 
@@ -84,12 +83,52 @@ func RequestDataFromSlave(slavePort string, key string) {
 	n, err := connection.Read(buffer)
 	if err != nil {
 		log.Println("No response recieved, Connection Timed Out:", slavePort)
-		return
+		return FileChunk{}, errors.New("No response from slave")
 	}
 	var incomingFileChunk FileChunk
 	err = json.Unmarshal(buffer[:n], &incomingFileChunk)
 	if err != nil {
 		log.Println("Error unmarshaling data from", slavePort)
 	}
-	log.Println("incomingFileChunk:", incomingFileChunk)
+	return incomingFileChunk, nil
+}
+
+func RequestDeleteFromSlave(slaveNode config.Node, chunkHash string) error {
+
+	connection, err := net.Dial("tcp", fmt.Sprintf("%s:%s", slaveNode.Host, slaveNode.Port))
+	if err != nil {
+		log.Println("Could not connect to slave to delete chunk:", err)
+		return err
+	}
+	defer connection.Close()
+
+	payload := TcpPayload{
+		Type: "del",
+		Key:  chunkHash,
+	}
+	jsonData, _ := json.Marshal(payload)
+
+	_, err = connection.Write(jsonData)
+	if err != nil {
+		log.Println("Error sending delete request to slave:", err)
+		return err
+	}
+
+	connection.SetReadDeadline(time.Now().Add(10 * time.Second))
+
+	buffer := make([]byte, 256)
+	n, err := connection.Read(buffer)
+	if err != nil {
+		log.Println("No ACK received, Connection Timed Out:", slaveNode.Port)
+		return err
+	}
+
+	ack := string(buffer[:n])
+	if ack == "ACK" {
+		log.Println("Received DELETE_ACK from slave:", slaveNode.Port)
+		return nil
+	} else {
+		log.Println("Unrecognized ACK from slave during delete:", ack)
+		return errors.New("Unrecognized delete ACK")
+	}
 }

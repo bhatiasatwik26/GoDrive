@@ -82,3 +82,13 @@ func addChunkInfoToMetaData(fileName string, chunkHash string, ChunkIndex int, p
 	}
 	SaveMetaDataToFile()
 }
+func updateChunkHashInMetaData(fileName string, chunkHash string, ChunkIndex int, port string) {
+
+	metadata.mu.Lock()
+	defer metadata.mu.Unlock()
+
+	obtainedChunkInfo := metadata.Chunks[fileName][ChunkIndex]
+	obtainedChunkInfo.ChunkHash = chunkHash
+
+	SaveMetaDataToFile()
+}

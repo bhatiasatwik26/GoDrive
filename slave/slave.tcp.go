@@ -28,7 +28,10 @@ func startSlaveTcp(node config.Node) {
 	}
 
 	defer listener.Close()
-	log.Println("Slave listening on port", fullAddress)
+	log.Printf(`
+ ╭······························ 
+ │ Slave active on port: %s    
+ ╰······························`, node.Port)
 
 	err = os.MkdirAll(fmt.Sprintf("slave/storage/Port_%v", node.Port), os.ModePerm)
 	if err != nil {
@@ -73,6 +76,15 @@ func handleIncomingMasterRequest(node config.Node, connection net.Conn) {
 			log.Println("Error marshelling payload:", node.Port, err)
 		}
 		connection.Write([]byte(res))
+	} else if incomingPayload.Type == "del" {
+		chunkKey := incomingPayload.Key
+		err := handleChunkDelete(chunkKey, node.Port)
+		if err != nil {
+			log.Printf("Failed to delete chunk %s: %v\n", chunkKey, err)
+			connection.Write([]byte(err.Error()))
+		} else {
+			connection.Write([]byte("ACK"))
+		}
 	} else {
 		log.Println("Invalid request by master:", incomingPayload.Type, node.Port)
 	}
@@ -122,4 +134,17 @@ func handleChunkRequest(key string, port string) master.FileChunk {
 	res.Index = 0
 	res.Data = data
 	return res
+}
+func handleChunkDelete(key string, port string) error {
+	folder1 := key[:2]
+	folder2 := key[2:4]
+	filename := key
+	path := fmt.Sprintf("slave/storage/Port_%s/%s/%s/%s", port, folder1, folder2, filename)
+
+	err := os.RemoveAll(path)
+	if err != nil {
+		return err
+	}
+	log.Printf("Successfully deleted chunk at path: %s\n", path)
+	return nil
 }
