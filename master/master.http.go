@@ -103,9 +103,15 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 	}
 	createdFile := BreakFilesIntoChunks(incomingFile)
 	if success := DistriButeChunksToNode(createdFile); success {
+		log.Println("────────────────────────────────────────")
+		log.Printf("✅  Master: Splitted file into %v chunks", len(createdFile.Chunks))
+		log.Println("────────────────────────────────────────")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(fmt.Sprintf("Accepted file: '%v'.", incomingFile.Name)))
 	} else {
+		log.Println("────────────────────────────────────────")
+		log.Printf("⚠️  Master: Failed to upload file")
+		log.Println("────────────────────────────────────────")
 		http.Error(w, "Failed to upload file", http.StatusInternalServerError)
 	}
 
@@ -142,9 +148,18 @@ func handleFileDownload(w http.ResponseWriter, r *http.Request) {
 		close(incomingChunksChannel)
 	}()
 	for incomingFileChunk := range incomingChunksChannel {
+		if incomingFileChunk.Index == -1 {
+			log.Println("────────────────────────────────────────")
+			log.Printf("⚠️  Master: Error while downloading file")
+			log.Println("────────────────────────────────────────")
+			http.Error(w, "Error in Downloading file", http.StatusInternalServerError)
+			return
+		}
 		downloadedFile.Chunks[incomingFileChunk.Index] = incomingFileChunk
 	}
-	log.Printf("⬇️  Download %v sucessfully\n", downloadedFile.Name)
+	log.Println("────────────────────────────────────────")
+	log.Printf("✅ Master: Download %v sucessfully\n", downloadedFile.Name)
+	log.Println("────────────────────────────────────────")
 	createdFileAfterMerge := MergeChunksToFile(downloadedFile)
 	createdFileJson, err := json.Marshal(createdFileAfterMerge)
 	if err != nil {

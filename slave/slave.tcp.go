@@ -23,26 +23,26 @@ func startSlaveTcp(node config.Node) {
 	listener, err := net.Listen("tcp", fullAddress)
 
 	if err != nil {
-		log.Fatal("Cant boot tcp server:", node.Port)
+		log.Println("🔴 Cant boot tcp server:", node.Port)
 		return
 	}
 
 	defer listener.Close()
 	log.Printf(`
- ╭······························ 
- │ Slave active on port: %s    
- ╰······························`, node.Port)
+╭────────────────────────────╮
+│ slave active on port %s  │
+╰────────────────────────────╯`, node.Port)
 
 	err = os.MkdirAll(fmt.Sprintf("slave/storage/Port_%v", node.Port), os.ModePerm)
 	if err != nil {
-		log.Println("Couldn't create file storage:", node.Port, err)
+		log.Println("🔴 Couldn't create file storage:", node.Port, err)
 		return
 	}
 
 	for {
 		connection, err := listener.Accept()
 		if err != nil {
-			log.Println("Error in connection, dropping now", node.Port)
+			log.Println("🔴 Error in connection, dropping now", node.Port)
 			continue
 		}
 		go handleIncomingMasterRequest(node, connection)
@@ -54,14 +54,15 @@ func handleIncomingMasterRequest(node config.Node, connection net.Conn) {
 	buffer := make([]byte, 1024)
 	n, err := connection.Read(buffer)
 	if err != nil {
-		log.Println("Error reading connection payload", node.Port)
+		log.Println("🔴 Error reading connection payload", node.Port)
 		return
 	}
 	var incomingPayload master.TcpPayload
 	err = json.Unmarshal(buffer[:n], &incomingPayload)
 	if err != nil {
-		log.Println("Error unmarshaling json", node.Port)
+		log.Println("🔴 Error unmarshaling json", node.Port)
 	}
+	log.Printf("|TCP|: Master ---> Slave[%v]:::{ %v }", node.Port, incomingPayload.Type)
 	if incomingPayload.Type == "chunk" {
 		msg, err := handleIncomingChunk(incomingPayload, node.Port)
 		if err != "" {
@@ -73,27 +74,24 @@ func handleIncomingMasterRequest(node config.Node, connection net.Conn) {
 	} else if incomingPayload.Type == "req" {
 		res, err := json.Marshal(handleChunkRequest(incomingPayload.Key, node.Port))
 		if err != nil {
-			log.Println("Error marshelling payload:", node.Port, err)
+			log.Println("🔴 Error marshaling payload:", node.Port, err)
 		}
 		connection.Write([]byte(res))
 	} else if incomingPayload.Type == "del" {
 		chunkKey := incomingPayload.Key
 		err := handleChunkDelete(chunkKey, node.Port)
 		if err != nil {
-			log.Printf("Failed to delete chunk %s: %v\n", chunkKey, err)
+			log.Printf("🔴 Failed to delete chunk %s: %v\n", chunkKey, err)
 			connection.Write([]byte(err.Error()))
 		} else {
 			connection.Write([]byte("ACK"))
 		}
 	} else {
-		log.Println("Invalid request by master:", incomingPayload.Type, node.Port)
+		log.Println("🔴 Invalid request by master:", incomingPayload.Type, node.Port)
 	}
 }
 
 func handleIncomingChunk(incomingPayload master.TcpPayload, port string) (string, string) {
-	if port == "6001" || port == "6002" {
-		return "", "HashMismatch"
-	}
 	newHash := sha256.Sum256([]byte(incomingPayload.FileChunk.Data))
 	hashStr := fmt.Sprintf("%x", newHash)
 	incomingHash := incomingPayload.FileChunk.Hash
@@ -109,17 +107,18 @@ func handleIncomingChunk(incomingPayload master.TcpPayload, port string) (string
 
 	err := os.MkdirAll(fmt.Sprintf("slave/storage/Port_%s/%s/%s", port, folder1, folder2), os.ModePerm)
 	if err != nil {
-		log.Println("Couldn't create directories:", err)
+		log.Println("🔴 Couldn't create directories:", err)
 		return "", "DirectoryCreationError"
 	}
 	err = os.WriteFile(storagePath, []byte(incomingPayload.FileChunk.Data), os.ModePerm)
 	if err != nil {
-		log.Println("Error writing file:", err)
+		log.Println("🔴 Error writing file:", err)
 		return "", "FileWriteError"
 	}
 
 	return "ACK", ""
 }
+
 func handleChunkRequest(key string, port string) master.FileChunk {
 	folder1 := key[:2]
 	folder2 := key[2:4]
@@ -130,14 +129,16 @@ func handleChunkRequest(key string, port string) master.FileChunk {
 
 	data, err := os.ReadFile(storagePath)
 	if err != nil {
-		log.Println("Error reading file:", err, port)
+		log.Println("🔴 Error finding chunk:", port)
 		res.Index = -1
 		return res
 	}
+	log.Println("🟢 Chunk found in slave:", port)
 	res.Index = 0
 	res.Data = data
 	return res
 }
+
 func handleChunkDelete(key string, port string) error {
 	folder1 := key[:2]
 	folder2 := key[2:4]
@@ -146,6 +147,7 @@ func handleChunkDelete(key string, port string) error {
 
 	err := os.RemoveAll(path)
 	if err != nil {
+		log.Println("🔴 Error deleting file:", err)
 		return err
 	}
 	return nil

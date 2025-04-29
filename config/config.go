@@ -25,6 +25,7 @@ type Node struct {
 	Port    string `yaml:"port"`
 	Healthy bool   `yaml:"health"`
 }
+
 type Config struct {
 	Master      MasterConfig
 	SlaveNodes  []Node `yaml:"slaveDataNodes"`
@@ -36,11 +37,11 @@ var ReadConfig Config
 func LoadConfig() {
 	file, err := os.ReadFile("config/config.yaml")
 	if err != nil {
-		log.Fatal("Couldn't load config", err)
+		log.Println("Couldn't load config", err)
 	}
 	err = yaml.Unmarshal(file, &ReadConfig)
 	if err != nil {
-		log.Fatal("Couldn't read config")
+		log.Println("Couldn't read config")
 	}
-	log.Println("Config Loaded Sucessfully!")
+	log.Println("Config Loaded Successfully!")
 }
