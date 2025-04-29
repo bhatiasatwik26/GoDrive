@@ -99,13 +99,3 @@ GODRIVE/
 5. Upload files via client scripts or REST APIs.
 
 ---
-
-## 🙌 Acknowledgements
-
-This project was created by **Satwik**, inspired by real-world DFS systems like HDFS and Ceph, with the goal of learning distributed architecture, consistency, and fault tolerance in depth.
-
----
-
-## 📜 License
-
-[MIT License](LICENSE)
