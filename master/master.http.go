@@ -36,6 +36,44 @@ func StartMasterHttp() {
 		log.Fatal("HTTP server crashed")
 	}
 }
+func DeleteFileIfQuoramFails(filename string) {
+
+	metadata.mu.Lock()
+	fileInfo, exists := metadata.Chunks[filename]
+	metadata.mu.Unlock()
+
+	if !exists {
+		return
+	}
+
+	deleteAckChannel := make(chan bool)
+	var wg sync.WaitGroup
+
+	for _, chunkInfo := range fileInfo {
+		wg.Add(1)
+		go deleteChunkFromSlaves(chunkInfo, deleteAckChannel, &wg)
+	}
+
+	go func() {
+		wg.Wait()
+		close(deleteAckChannel)
+	}()
+
+	allSuccessful := true
+	for ack := range deleteAckChannel {
+		if !ack {
+			allSuccessful = false
+			break
+		}
+	}
+
+	if allSuccessful {
+		metadata.mu.Lock()
+		delete(metadata.Chunks, filename)
+		metadata.mu.Unlock()
+		SaveMetaDataToFile()
+	}
+}
 
 // Route handler functions
 func healthCheck(w http.ResponseWriter, r *http.Request) {
@@ -44,6 +82,7 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleFileUpload(w http.ResponseWriter, r *http.Request) {
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST requests allowed in this route", http.StatusBadRequest)
 		return
@@ -58,10 +97,18 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "FileName or content is empty", http.StatusBadRequest)
 		return
 	}
+	if _, exists := metadata.Chunks[incomingFile.Name]; exists {
+		http.Error(w, "File already present in system. Delete file first to use upload or use 'update'.", http.StatusConflict)
+		return
+	}
 	createdFile := BreakFilesIntoChunks(incomingFile)
-	DistriButeChunksToNode(createdFile)
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf("Accepted file: %v", incomingFile.Name)))
+	if success := DistriButeChunksToNode(createdFile); success {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(fmt.Sprintf("Accepted file: '%v'.", incomingFile.Name)))
+	} else {
+		http.Error(w, "Failed to upload file", http.StatusInternalServerError)
+	}
+
 }
 
 func handleFileDownload(w http.ResponseWriter, r *http.Request) {
@@ -120,32 +167,6 @@ func getChunk(index int, chunkInfo *ChunkInfo, channelToSendChunk chan FileChunk
 	channelToSendChunk <- FileChunk{Index: -1}
 }
 
-// func handleFileUpdate(w http.ResponseWriter, r *http.Request) {
-
-// 	if r.Method != http.MethodPost {
-// 		http.Error(w, "Only POST requests allowed in this route", http.StatusBadRequest)
-// 		return
-// 	}
-// 	var incomingFile uploadedFile
-// 	err := json.NewDecoder(r.Body).Decode(&incomingFile)
-// 	if err != nil {
-// 		http.Error(w, "Bad format file", http.StatusBadRequest)
-// 		return
-// 	}
-// 	if incomingFile.Name == "" || incomingFile.Content == "" {
-// 		http.Error(w, "FileName or content is empty", http.StatusBadRequest)
-// 		return
-// 	}
-// 	if metadata.Chunks[incomingFile.Name] == nil {
-// 		http.Error(w, "No such file found to update", http.StatusNotFound)
-// 		return
-// 	}
-// 	createdFile := BreakFilesIntoChunks(incomingFile)
-// 	CompareChunksAndUpdate(createdFile)
-// 	w.WriteHeader(http.StatusOK)
-// 	w.Write([]byte(fmt.Sprintf("Accepted file: %v", incomingFile.Name)))
-// }
-
 func handleFileDelete(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodDelete {
@@ -195,9 +216,35 @@ func handleFileDelete(w http.ResponseWriter, r *http.Request) {
 		metadata.mu.Unlock()
 		SaveMetaDataToFile()
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, " Deleted '%s' from the system.\n", filename)
+		fmt.Fprintf(w, "Deleted '%s' from the system.\n", filename)
 	} else {
 		log.Println("Couldn't delete file")
 		http.Error(w, "Failed to delete file", http.StatusInternalServerError)
 	}
 }
+
+// func handleFileUpdate(w http.ResponseWriter, r *http.Request) {
+
+// 	if r.Method != http.MethodPost {
+// 		http.Error(w, "Only POST requests allowed in this route", http.StatusBadRequest)
+// 		return
+// 	}
+// 	var incomingFile uploadedFile
+// 	err := json.NewDecoder(r.Body).Decode(&incomingFile)
+// 	if err != nil {
+// 		http.Error(w, "Bad format file", http.StatusBadRequest)
+// 		return
+// 	}
+// 	if incomingFile.Name == "" || incomingFile.Content == "" {
+// 		http.Error(w, "FileName or content is empty", http.StatusBadRequest)
+// 		return
+// 	}
+// 	if metadata.Chunks[incomingFile.Name] == nil {
+// 		http.Error(w, "No such file found to update", http.StatusNotFound)
+// 		return
+// 	}
+// 	createdFile := BreakFilesIntoChunks(incomingFile)
+// 	CompareChunksAndUpdate(createdFile)
+// 	w.WriteHeader(http.StatusOK)
+// 	w.Write([]byte(fmt.Sprintf("Accepted file: %v", incomingFile.Name)))
+// }

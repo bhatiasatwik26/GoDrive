@@ -91,6 +91,9 @@ func handleIncomingMasterRequest(node config.Node, connection net.Conn) {
 }
 
 func handleIncomingChunk(incomingPayload master.TcpPayload, port string) (string, string) {
+	if port == "6001" || port == "6002" {
+		return "", "HashMismatch"
+	}
 	newHash := sha256.Sum256([]byte(incomingPayload.FileChunk.Data))
 	hashStr := fmt.Sprintf("%x", newHash)
 	incomingHash := incomingPayload.FileChunk.Hash
@@ -145,6 +148,5 @@ func handleChunkDelete(key string, port string) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Successfully deleted chunk at path: %s\n", path)
 	return nil
 }

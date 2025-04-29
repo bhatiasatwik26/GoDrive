@@ -10,23 +10,37 @@ type NodeSelector interface {
 	GiveNode() config.Node
 }
 
-func DistriButeChunksToNode(file FileStruct) {
+func DistriButeChunksToNode(file FileStruct) bool {
 	var wg sync.WaitGroup
-	for _, chunk := range file.Chunks {
-		for replication := 0; replication < 3; replication++ {
+	chunkSuccessMap := make([]int, len(file.Chunks))
+	var mu sync.Mutex
+
+	for ind, chunk := range file.Chunks {
+		for replication := 0; replication < config.ReadConfig.Master.ReplicationFactor; replication++ {
 			wg.Add(1)
-			go func(chunk FileChunk) {
+			go func(index int, chunk FileChunk) {
 				defer wg.Done()
 				selectedNode := MyNodeSelector.GiveNode()
-				_, err := SendDataToSlave(selectedNode, chunk)
-				if err != nil {
-					log.Println()
+				success, _ := SendDataToSlave(selectedNode, chunk)
+				if success {
+					mu.Lock()
+					chunkSuccessMap[index] += 1
+					mu.Unlock()
+					addChunkInfoToMetaData(file.Name, chunk.Hash, chunk.Index, selectedNode.Port)
 				}
-				addChunkInfoToMetaData(file.Name, chunk.Hash, chunk.Index, selectedNode.Port)
-			}(chunk)
+			}(ind, chunk)
 		}
 	}
 	wg.Wait()
+
+	for index, count := range chunkSuccessMap {
+		if count < config.ReadConfig.Master.WriteQuorum {
+			log.Println("Write quorum not met for chunk:", index, "in file:", file.Name)
+			DeleteFileIfQuoramFails(file.Name)
+			return false
+		}
+	}
+	return true
 }
 
 // func CompareChunksAndUpdate(file FileStruct) {

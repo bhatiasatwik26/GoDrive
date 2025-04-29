@@ -22,8 +22,6 @@ func ConfigureMasterTcpServices() {
 }
 
 func SendDataToSlave(slaveNode config.Node, chunk FileChunk) (bool, error) {
-
-	log.Println(slaveNode)
 	connection, err := net.Dial("tcp", fmt.Sprintf("%s:%s", slaveNode.Host, slaveNode.Port))
 	if err != nil {
 		log.Println("Could not connect to slave to send data:", err)
@@ -50,13 +48,13 @@ func SendDataToSlave(slaveNode config.Node, chunk FileChunk) (bool, error) {
 
 	ack := string(buffer[:n])
 	if ack == "ACK" {
-		fmt.Println("Recieved positive ACK!", slaveNode.Port)
+		fmt.Println("Recieved positive ACK!:", slaveNode.Port)
 		return true, nil
 	} else if ack == "HashMismatch" {
-		fmt.Println("Chunk corrupted during transfer")
+		fmt.Println("Chunk corrupted during transfer:", slaveNode.Port)
 		return false, errors.New("HashMismatch")
 	} else {
-		fmt.Println("Unrecognised ACK")
+		fmt.Println("Unrecognised ACK:", slaveNode.Port)
 		return false, errors.New("UnrecognisedAck")
 	}
 }
