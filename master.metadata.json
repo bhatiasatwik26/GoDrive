@@ -1,1 +1,21 @@
-{}
+{
+  "hey.txt": {
+    "0": {
+      "ChunkHash": "1be2e452b46d7a0d9656bbb1f768e8248eba1b75baed65f5d99eafa948899a6a",
+      "SlaveNodeList": [
+        "6010",
+        "6001",
+        "6002"
+      ]
+    },
+    "1": {
+      "ChunkHash": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a",
+      "SlaveNodeList": [
+        "6004",
+        "6005",
+        "6003"
+      ]
+    }
+  }
+}
+

@@ -31,8 +31,6 @@ func SaveMetaDataToFile() {
 		log.Println("Error writing metadata to file:", err)
 		return
 	}
-
-	// log.Println("Metadata successfully saved to master.metadata.json")
 }
 
 func loadMetaDataFromFile() {
@@ -83,13 +81,13 @@ func addChunkInfoToMetaData(fileName string, chunkHash string, ChunkIndex int, p
 	SaveMetaDataToFile()
 }
 
-func updateChunkHashInMetaData(fileName string, chunkHash string, ChunkIndex int, port string) {
+// func updateChunkHashInMetaData(fileName string, chunkHash string, ChunkIndex int, port string) {
 
-	metadata.mu.Lock()
-	defer metadata.mu.Unlock()
+// 	metadata.mu.Lock()
+// 	defer metadata.mu.Unlock()
 
-	obtainedChunkInfo := metadata.Chunks[fileName][ChunkIndex]
-	obtainedChunkInfo.ChunkHash = chunkHash
+// 	obtainedChunkInfo := metadata.Chunks[fileName][ChunkIndex]
+// 	obtainedChunkInfo.ChunkHash = chunkHash
 
-	SaveMetaDataToFile()
-}
+// 	SaveMetaDataToFile()
+// }
