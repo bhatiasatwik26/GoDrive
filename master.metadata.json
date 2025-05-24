@@ -1,127 +1,19 @@
 {
-  "test.txt": {
+  "hey.txt": {
     "0": {
-      "ChunkHash": "7c0184312ac5bed1a9913facea88ae5c1b047be4ee9edb435f9bcae1a5b05445",
+      "ChunkHash": "1be2e452b46d7a0d9656bbb1f768e8248eba1b75baed65f5d99eafa948899a6a",
       "SlaveNodeList": [
-        "6002",
-        "6004",
-        "6006"
-      ]
-    },
-    "1": {
-      "ChunkHash": "fcec91509759ad995c2cd14bcb26b2720993faf61c29d379b270d442d92290eb",
-      "SlaveNodeList": [
-        "6001",
-        "6005",
-        "6003"
-      ]
-    }
-  },
-  "test22.txt": {
-    "0": {
-      "ChunkHash": "7c0184312ac5bed1a9913facea88ae5c1b047be4ee9edb435f9bcae1a5b05445",
-      "SlaveNodeList": [
-        "6004",
-        "6002",
-        "6006"
-      ]
-    },
-    "1": {
-      "ChunkHash": "fcec91509759ad995c2cd14bcb26b2720993faf61c29d379b270d442d92290eb",
-      "SlaveNodeList": [
-        "6001",
-        "6005",
-        "6003"
-      ]
-    }
-  },
-  "test222.txt": {
-    "0": {
-      "ChunkHash": "7c0184312ac5bed1a9913facea88ae5c1b047be4ee9edb435f9bcae1a5b05445",
-      "SlaveNodeList": [
-        "6002",
-        "6003",
-        "6004"
-      ]
-    },
-    "1": {
-      "ChunkHash": "fcec91509759ad995c2cd14bcb26b2720993faf61c29d379b270d442d92290eb",
-      "SlaveNodeList": [
-        "6006",
-        "6001",
-        "6005"
-      ]
-    }
-  },
-  "test222322.txt": {
-    "0": {
-      "ChunkHash": "7c0184312ac5bed1a9913facea88ae5c1b047be4ee9edb435f9bcae1a5b05445",
-      "SlaveNodeList": [
-        "6006",
-        "6004",
-        "6002"
-      ]
-    },
-    "1": {
-      "ChunkHash": "fcec91509759ad995c2cd14bcb26b2720993faf61c29d379b270d442d92290eb",
-      "SlaveNodeList": [
-        "6003",
-        "6005",
-        "6001"
-      ]
-    }
-  },
-  "test22232222.txt": {
-    "0": {
-      "ChunkHash": "7c0184312ac5bed1a9913facea88ae5c1b047be4ee9edb435f9bcae1a5b05445",
-      "SlaveNodeList": [
-        "6002",
-        "6001",
-        "6005"
-      ]
-    },
-    "1": {
-      "ChunkHash": "fcec91509759ad995c2cd14bcb26b2720993faf61c29d379b270d442d92290eb",
-      "SlaveNodeList": [
-        "6006",
-        "6003",
-        "6004"
-      ]
-    }
-  },
-  "test2232.txt": {
-    "0": {
-      "ChunkHash": "7c0184312ac5bed1a9913facea88ae5c1b047be4ee9edb435f9bcae1a5b05445",
-      "SlaveNodeList": [
-        "6006",
-        "6003",
-        "6001"
-      ]
-    },
-    "1": {
-      "ChunkHash": "fcec91509759ad995c2cd14bcb26b2720993faf61c29d379b270d442d92290eb",
-      "SlaveNodeList": [
-        "6005",
-        "6002",
-        "6004"
-      ]
-    }
-  },
-  "test22322.txt": {
-    "0": {
-      "ChunkHash": "7c0184312ac5bed1a9913facea88ae5c1b047be4ee9edb435f9bcae1a5b05445",
-      "SlaveNodeList": [
-        "6003",
+        "6010",
         "6001",
         "6002"
       ]
     },
     "1": {
-      "ChunkHash": "fcec91509759ad995c2cd14bcb26b2720993faf61c29d379b270d442d92290eb",
+      "ChunkHash": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a",
       "SlaveNodeList": [
         "6004",
-        "6006",
-        "6005"
+        "6005",
+        "6003"
       ]
     }
   }

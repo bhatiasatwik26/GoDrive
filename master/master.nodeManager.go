@@ -10,6 +10,36 @@ type NodeSelector interface {
 	GiveNode() config.Node
 }
 
+func assignNode(chunk FileChunk) (bool, []string) {
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	successCount := 0
+	assignedPorts := make([]string, 0, config.ReadConfig.Master.ReplicationFactor)
+
+	for replication := 0; replication < config.ReadConfig.Master.ReplicationFactor; replication++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			selectedNode := MyNodeSelector.GiveNode()
+			success, _ := SendDataToSlave(selectedNode, chunk)
+			if success {
+				mu.Lock()
+				successCount++
+				assignedPorts = append(assignedPorts, selectedNode.Port)
+				mu.Unlock()
+			}
+		}()
+	}
+	wg.Wait()
+
+	if successCount < config.ReadConfig.Master.WriteQuorum {
+		log.Printf("Write quorum not met for chunk index %d\n", chunk.Index)
+		return false, nil
+	}
+
+	return true, assignedPorts
+}
+
 func DistriButeChunksToNode(file FileStruct) bool {
 	var wg sync.WaitGroup
 	chunkSuccessMap := make([]int, len(file.Chunks))
