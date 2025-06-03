@@ -9,30 +9,40 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
+	"time"
 )
 
 func StartSlaveNodes() {
 	slaveList := config.ReadConfig.SlaveNodes
+	backupList := config.ReadConfig.BackupNodes
 	for _, node := range slaveList {
-		go startSlaveTcp(node)
+		go startSlaveTcp(node, "slave")
+	}
+	for _, node := range backupList {
+		go startSlaveTcp(node, "backup")
 	}
 }
 
-func startSlaveTcp(node config.Node) {
+func startSlaveTcp(node config.Node, role string) {
 	fullAddress := fmt.Sprintf(":%s", node.Port)
 	listener, err := net.Listen("tcp", fullAddress)
 
 	if err != nil {
-		log.Println("🔴 Cant boot tcp server:", node.Port)
+		log.Println("🔴   ", node.Port)
 		return
 	}
 
 	defer listener.Close()
-	log.Printf(`
-╭────────────────────────────╮
-│ slave active on port %s  │
-╰────────────────────────────╯`, node.Port)
 
+	if role == "slave" {
+		log.Printf(`
+╭────────────────────────────╮
+│ Slave active on port %s  │
+╰────────────────────────────╯`, node.Port)
+	} else {
+		log.Printf("┌─ Backup active on port %s ─┐", node.Port)
+	}
 	err = os.MkdirAll(fmt.Sprintf("slave/storage/Port_%v", node.Port), os.ModePerm)
 	if err != nil {
 		log.Println("🔴 Couldn't create file storage:", node.Port, err)
@@ -86,6 +96,20 @@ func handleIncomingMasterRequest(node config.Node, connection net.Conn) {
 		} else {
 			connection.Write([]byte("ACK"))
 		}
+	} else if incomingPayload.Type == "heartbeat" {
+		if node.Port == "6001" {
+			connection.Write([]byte(""))
+		} else {
+			connection.Write([]byte("ACK"))
+		}
+	} else if strings.HasPrefix(incomingPayload.Type, "transfer") {
+		target := strings.TrimPrefix(incomingPayload.Type, "transfer@")
+		if handleInternodeDataTransfer(target, incomingPayload.Key, node.Port) {
+			connection.Write([]byte("ACK"))
+		} else {
+			connection.Write([]byte("NOACK"))
+		}
+
 	} else {
 		log.Println("🔴 Invalid request by master:", incomingPayload.Type, node.Port)
 	}
@@ -151,4 +175,43 @@ func handleChunkDelete(key string, port string) error {
 		return err
 	}
 	return nil
+}
+
+func handleInternodeDataTransfer(target, hash string, port string) bool {
+
+	fileChunk := handleChunkRequest(hash, port)
+	fileChunk.Hash = hash
+
+	connection, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%s", target))
+	if err != nil {
+		log.Printf("🔴 [%v]: Could not connect to %v for internode transfer:", port, target)
+		return false
+	}
+	defer connection.Close()
+
+	payload := master.TcpPayload{Type: "chunk", FileChunk: fileChunk}
+	jsonData, _ := json.Marshal(payload)
+	_, err = connection.Write(jsonData)
+	if err != nil {
+		log.Printf("🔴 [%v]: Could not send to %v for internode transfer:", port, target)
+		return false
+	}
+
+	connection.SetReadDeadline(time.Now().Add(10 * time.Second))
+
+	buffer := make([]byte, 256)
+	n, err := connection.Read(buffer)
+	if err != nil {
+		log.Printf("🔴 [%v]: Error reading from internode connection from %v", port, target)
+		return false
+	}
+
+	ack := string(buffer[:n])
+	if ack == "ACK" {
+		log.Printf("🟢 [%v]: Positive ACK received from %v for internode transfer:", port, target)
+		return true
+	} else {
+		log.Printf("🔴 [%v]: No ACK received from %v for internode transfer:", port, target)
+		return false
+	}
 }

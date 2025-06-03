@@ -1,1 +1,46 @@
-{}
+{
+  "test.txt": {
+    "0": {
+      "ChunkHash": "1be2e452b46d7a0d9656bbb1f768e8248eba1b75baed65f5d99eafa948899a6a",
+      "SlaveNodeList": [
+        "6001",
+        "6004",
+        "6002"
+      ]
+    },
+    "1": {
+      "ChunkHash": "db2e7f1bd5ab9968ae76199b7cc74795ca7404d5a08d78567715ce532f9d2669",
+      "SlaveNodeList": [
+        "6005",
+        "6003",
+        "6006"
+      ]
+    }
+  },
+  "test2.txt": {
+    "0": {
+      "ChunkHash": "8d586f8b60df1ad7502b52fc50d2e0b6d0d9b5643875c054d821dfd8e6672bed",
+      "SlaveNodeList": [
+        "6003",
+        "6004",
+        "6001"
+      ]
+    },
+    "1": {
+      "ChunkHash": "9abac39df252ec3a048796488a1d12cea50dea8679c4f927aff1abea2e8be885",
+      "SlaveNodeList": [
+        "6007",
+        "6005",
+        "6006"
+      ]
+    },
+    "2": {
+      "ChunkHash": "65c74c15a686187bb6bbf9958f494fc6b80068034a659a9ad44991b08c58f2d2",
+      "SlaveNodeList": [
+        "6008",
+        "6002",
+        "6009"
+      ]
+    }
+  }
+}

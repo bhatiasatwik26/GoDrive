@@ -21,9 +21,8 @@ type MasterConfig struct {
 }
 
 type Node struct {
-	Host    string `yaml:"host"`
-	Port    string `yaml:"port"`
-	Healthy bool   `yaml:"health"`
+	Host string `yaml:"host"`
+	Port string `yaml:"port"`
 }
 
 type Config struct {

@@ -22,6 +22,7 @@ func ConfigureMasterTcpServices() {
 }
 
 func SendDataToSlave(slaveNode config.Node, chunk FileChunk) (bool, error) {
+
 	connection, err := net.Dial("tcp", fmt.Sprintf("%s:%s", slaveNode.Host, slaveNode.Port))
 	if err != nil {
 		log.Println("Could not connect to slave to send data:", err)
@@ -60,6 +61,7 @@ func SendDataToSlave(slaveNode config.Node, chunk FileChunk) (bool, error) {
 }
 
 func RequestChunkFromSlave(slavePort string, key string) (FileChunk, error) {
+
 	host := "127.0.0.1"
 	connection, err := net.Dial("tcp", fmt.Sprintf("%s:%s", host, slavePort))
 	if err != nil {
@@ -131,5 +133,75 @@ func RequestDeleteFromSlave(slaveNode config.Node, chunkHash string) error {
 	} else {
 		log.Println("🔴 Unrecognized ACK from slave during delete:", ack)
 		return errors.New("Unrecognized delete ACK")
+	}
+}
+
+func SendHeartBeatToSlave(slaveNode config.Node) bool {
+
+	connection, err := net.Dial("tcp", fmt.Sprintf("%s:%s", slaveNode.Host, slaveNode.Port))
+	if err != nil {
+		log.Println("Could not send heartbeat to slave:", err)
+		return false
+	}
+	defer connection.Close()
+
+	payload := TcpPayload{Type: "heartbeat"}
+	jsonData, _ := json.Marshal(payload)
+	_, err = connection.Write(jsonData)
+	if err != nil {
+		log.Println("🔴 Error sending heartBeat:", err)
+		return false
+	}
+
+	connection.SetReadDeadline(time.Now().Add(3 * time.Second))
+
+	buffer := make([]byte, 256)
+	n, err := connection.Read(buffer)
+	if err != nil {
+		return false
+	}
+
+	ack := string(buffer[:n])
+	if ack == "ACK" {
+		return true
+	} else {
+		return false
+	}
+}
+
+func SendInterNodeTransferRequest(fromPort string, toPort string, chunkHash string) bool {
+
+	connection, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%s", fromPort))
+
+	if err != nil {
+		log.Println("Could not connect to slave to send internode request:", err)
+		return false
+	}
+	defer connection.Close()
+
+	payload := TcpPayload{Type: fmt.Sprintf("transfer@%v", toPort), Key: chunkHash}
+	jsonData, _ := json.Marshal(payload)
+	_, err = connection.Write(jsonData)
+	if err != nil {
+		log.Println("🔴 Error sending internode request:", err)
+		return false
+	}
+
+	connection.SetReadDeadline(time.Now().Add(100 * time.Second))
+
+	buffer := make([]byte, 256)
+	n, err := connection.Read(buffer)
+	if err != nil {
+		log.Println("🔴 InterNode transfer unsuccessful")
+		return false
+	}
+
+	ack := string(buffer[:n])
+	if ack == "ACK" {
+		log.Printf("🟢InterNode transfer from %s to %s successful", fromPort, toPort)
+		return true
+	} else {
+		log.Println("🔴 InterNode transfer unsuccessful")
+		return false
 	}
 }
