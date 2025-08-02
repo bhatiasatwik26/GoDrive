@@ -32,7 +32,6 @@ GoDrive is a lightweight, fault-tolerant distributed file system built with Go. 
 
 - **Go** – core programming language for concurrency and networking
 - **LRU Cache** – in-memory cache for optimized reads
-- **Moore's Voting Algorithm** – quorum consensus for chunk consistency
 - **Custom Node Selector Interface** – to decide which node receives which chunk
 - **Standard Libraries** – `net/http`, `sync`, `os`, `log`
 
