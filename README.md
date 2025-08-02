@@ -12,7 +12,6 @@ GoDrive is a lightweight, fault-tolerant distributed file system built with Go. 
 - ✅ **Checksum & Integrity**: Each chunk uses a hash for integrity validation.
 - 📥 **Write & Update Support**: Efficient handling of new uploads and delta updates.
 - 📤 **Chunk Deletion**: Removes unused or invalid chunks across slave nodes.
-- ⚖️ **Quorum Resolution**: Uses Moore’s Voting Algorithm to determine the majority chunk version in case of conflicts.
 - 🧊 **LRU Cache**: Speeds up read performance by caching frequently accessed chunks.
 - 💓 **Node Health Checks**: Pulse detection ensures replicas are live and triggers automatic re-replication if a node is down.
 - 🧵 **Concurrency**: Uses goroutines and sync primitives for parallel chunk distribution and updates.
